@@ -1,0 +1,36 @@
+[hugging_face_dataset]
+    [hugging_face_dataset.alffa]
+    path = "Isma/alffa_wolof"
+    audio_name_id = "Isma"
+    save_brut_dir = "DATA\\BRUT\\WOLOF_AUDIO_TRANS\\alffa\\alffa_brut_df.csv" 
+    save_clean_dir = "DATA\\CLEANED\\WOLOF_AUDIO_TRANS\\alffa\\alffa_clean_df.csv" 
+    save_audio_dir = "DATA\\CLEANED\\WOLOF_AUDIO_TRANS\\alffa\\audio"
+    sr = 16000
+
+    [hugging_face_dataset.google_fleurs]
+    path = "google/fleurs" # specify the language, for wolof : wo_sn
+    audio_name_id = "google_fleurs"
+    save_brut_dir = "DATA\\BRUT\\WOLOF_AUDIO_TRANS\\google_fleurs\\google_fleurs_brut.csv"
+    save_clean_dir = "DATA\\CLEANED\\WOLOF_AUDIO_TRANS\\google_fleurs\\google_fleurs_clean.csv" 
+    save_audio_dir = "DATA\\CLEANED\\WOLOF_AUDIO_TRANS\\google_fleurs\\audio"
+    sr = 16000
+
+    [hugging_face_dataset.serge]
+    path = "serge-wilson/wolof_speech_transcription"
+    audio_name_id = "serge"
+    save_brut_dir = "DATA\\BRUT\\WOLOF_AUDIO_TRANS\\serge\\serge_brut_df.csv"
+    save_clean_dir = "DATA\\CLEANED\\WOLOF_AUDIO_TRANS\\serge\\serge_clean_df.csv" 
+    save_audio_dir = "DATA\\CLEANED\\WOLOF_AUDIO_TRANS\\serge\\audio"
+    sr = 16000
+
+    [hugging_face_dataset.waxal]
+    path = "perrynelson/waxal-wolof,perrynelson/waxal-wolof2"
+    audio_name_id = "perrynelson"
+    save_brut_dir = "DATA\\BRUT\\WOLOF_AUDIO_TRANS\\waxal\\waxal_brut.csv"
+    save_clean_dir = "DATA\\CLEANED\\WOLOF_AUDIO_TRANS\\waxal\\waxal__clean_df.csv" 
+    save_audio_dir = "DATA\\CLEANED\\WOLOF_AUDIO_TRANS\\waxal\\audio"
+    sr = 16000
+
+[]
+
+
