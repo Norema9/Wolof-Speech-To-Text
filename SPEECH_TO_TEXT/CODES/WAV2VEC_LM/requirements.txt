@@ -1,0 +1,3 @@
+pyctcdecode
+transformers
+kenlm # installed using : pip install https://github.com/kpu/kenlm/archive/master.zip
