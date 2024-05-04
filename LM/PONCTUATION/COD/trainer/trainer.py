@@ -110,7 +110,9 @@ class Trainer(BaseTrainer):
             punct_precision, 
             capit_precision, 
             punct_recall, 
-            capit_recall) = torch.tensor(self.compute_metric(outputs.punct_logits.detach(), outputs.capit_logits.detach(), batch['punct_labels'], batch['capit_labels']))
+            capit_recall,
+            punct_f1,
+            capit_f1) = torch.tensor(self.compute_metric(outputs.punct_logits.detach(), outputs.capit_logits.detach(), batch['punct_labels'].detach(), batch['capit_labels'].detach()))
             
             # (punct_accuracy, 
             # capit_accuracy) = torch.tensor(self.compute_metric(outputs.punct_logits.detach(), outputs.capit_logits.detach(), batch['punct_labels'], batch['capit_labels']))
@@ -157,7 +159,9 @@ class Trainer(BaseTrainer):
                     "punct_precision": punct_precision,
                     "capit_precision": capit_precision,
                     "punct_recall": punct_recall,
-                    "capit_recall": capit_recall
+                    "capit_recall": capit_recall,
+                    "punct_f1": punct_f1,
+                    "capit_f1": capit_f1
                 }
                 train_logs = {k: v.item() if hasattr(v, 'item') else v for k, v in train_logs.items()}
 
@@ -201,7 +205,9 @@ class Trainer(BaseTrainer):
             "punct_precision": 0,
             "capit_precision": 0,
             "punct_recall": 0,
-            "capit_recall": 0
+            "capit_recall": 0,
+            "punct_f1": 0,
+            "capit_f1": 0
         }
 
         for batch in tqdm(self.val_dl, total = len(self.val_dl), disable = not self.rank == 0):
@@ -215,13 +221,17 @@ class Trainer(BaseTrainer):
             punct_prec, 
             capit_prec, 
             punct_rec, 
-            capit_rec) = torch.tensor(self.compute_metric(outputs.punct_logits.detach(), outputs.capit_logits.detach(), batch['punct_labels'], batch['capit_labels'])) / len(self.val_dl)
+            capit_rec, 
+            punct_f1_score, 
+            capit_f1_score) = torch.tensor(self.compute_metric(outputs.punct_logits.detach(), outputs.capit_logits.detach(), batch['punct_labels'], batch['capit_labels'])) / len(self.val_dl)
             val_logs['punct_accuracy'] += punct_accur
             val_logs['capit_accuracy'] += capit_accur
             val_logs['punct_precision'] += punct_prec
             val_logs['capit_precision'] += capit_prec
             val_logs['punct_recall'] += punct_rec
             val_logs['capit_recall'] += capit_rec
+            val_logs['punct_f1'] += punct_f1_score
+            val_logs['capit_f1'] += capit_f1_score
 
         # average over devices in ddp
         if self.n_gpus > 1:

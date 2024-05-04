@@ -1,7 +1,7 @@
 
 from typing import Dict, Union
-from utils.utils import process_text
 import os
+from utils.utils import process_text
 import random
 
 class CreateDataset:

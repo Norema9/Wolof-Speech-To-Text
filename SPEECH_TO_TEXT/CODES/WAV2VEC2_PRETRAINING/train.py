@@ -7,6 +7,7 @@ from tqdm import tqdm
 import toml
 import torch.multiprocessing as mp
 import pandas as pd
+from itertools import islice
 
 import torch
 from torch.utils.data.dataloader import DataLoader
@@ -186,7 +187,7 @@ def main(config, resume):
     gumbel_temperature_decay = config["meta"]["gumbel_temperature_decay"]
     min_gumbel_temperature = config["meta"]["min_gumbel_temperature"]    
     saving_steps = config["meta"]["saving_steps"]
-    pad_to_multiple_of = 10
+    pad_to_multiple_of = None
     max_train_steps = config["meta"]["max_train_steps"]
     num_train_epochs = config["meta"]["num_train_epochs"]
     per_device_train_batch_size = config["train_dataset"]["dataloader"]["per_device_train_batch_size"]
@@ -359,6 +360,7 @@ def main(config, resume):
 
     # Only show the progress bar once on each machine.
     completed_steps = checkpoint['completed_steps'] + 1 if resume else 0
+    resume_steps = checkpoint['completed_steps'] + 1 if resume else 0
     starting_epoch = checkpoint['epoch'] if resume else 0
     progress_bar = tqdm(initial = completed_steps, total = max_train_steps, disable=not accelerator.is_local_main_process)
 
@@ -369,8 +371,11 @@ def main(config, resume):
         if accelerator.is_main_process:
             print(f"\nEpoch {epoch}: ")
         model.train()
+        
+        if resume:
+            train_dataloader = islice(train_dataloader, resume_steps, None) # start the train_loader from the last iteration
+        
         for step, batch in enumerate(train_dataloader):
-            # compute num of losses
             num_losses = batch["mask_time_indices"].sum()
             sub_attention_mask = batch.pop("sub_attention_mask", None)
             sub_attention_mask = (

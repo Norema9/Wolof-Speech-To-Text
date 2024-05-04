@@ -32,7 +32,11 @@ class CustomDataset(Dataset):
     def __getitem__(self, idx):
         item = self.data.iloc[idx]
         batch = {}
-        batch["input_values"] = sf.read(item[self.audio_column_name])[0]
+        try:
+            batch["input_values"] = sf.read(item[self.audio_column_name])[0]
+        except Exception as e:
+            print(f"Error reading file {item[self.audio_column_name]}: {e}")
+            return None
         
 
         if len(batch["input_values"])//self.sr > self.max_duration:

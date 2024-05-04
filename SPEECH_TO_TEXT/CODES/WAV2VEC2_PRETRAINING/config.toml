@@ -16,7 +16,7 @@ device_ids = "0,1" # set the gpu devices on which you want to train your model
 max_gumbel_temperature = 2.0
 gumbel_temperature_decay = 0.999995
 min_gumbel_temperature = 0.5
-saving_steps = 15000
+saving_steps = 1000
 logging_steps = 1
 mask_time_prob = 0.6
 
