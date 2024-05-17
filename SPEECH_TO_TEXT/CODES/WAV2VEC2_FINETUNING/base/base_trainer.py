@@ -147,7 +147,7 @@ class BaseTrainer:
             self.model.load_state_dict(checkpoint["model"], strict = True)
         self.scaler.load_state_dict(checkpoint["scaler"])
 
-        if self.resume_step == len(self.train_dl) - 1:
+        if self.resume_step == len(self.train_dl) - 1: 
             self.resume_step = -1
             self.start_epoch += 1
             self.pbar_step = 0
