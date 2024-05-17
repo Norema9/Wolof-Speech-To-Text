@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import soundfile as sf
+import os
 
 from torch.utils.data import Dataset
 
@@ -33,7 +34,7 @@ class CustomDataset(Dataset):
         item = self.data.iloc[idx]
         batch = {}
         try:
-            batch["input_values"] = sf.read(item[self.audio_column_name])[0]
+            batch["input_values"] = sf.read(os.path.join(r"D:\MARONE\WOLOF\SPEECH_TO_TEXT", item[self.audio_column_name]))[0]
         except Exception as e:
             print(f"Error reading file {item[self.audio_column_name]}: {e}")
             return None

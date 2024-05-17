@@ -5,12 +5,12 @@ load_from_pretrained = false
 seed = 42
 num_train_epochs = 30
 max_train_steps = 300000
-output_dir = "D:\\MARONE\\WOLOF\\SPEECH_TO_TEXT\\MODELS\\WAV2VEC2_PRETRAINED_NEW_3"
+output_dir = "D:\\MARONE\\WOLOF\\SPEECH_TO_TEXT\\MODELS\\WAV2VEC2_PRETRAINED_NEW_\\EVALUATIONS"
 dataset_dir = "DATA\\CLEANED\\WOLOF_AUDIO\\datasets"
 audio_dir = "D:\\MARONE\\WOLOF\\SPEECH_TO_TEXT\\DATA\\CLEANED\\WOLOF_AUDIO\\audio"
 separator = "|"
 gradient_checkpointing = false
-gradient_accumulation_steps = 4
+gradient_accumulation_steps = 8
 use_amp = false # Whether to use Automatic Mixed Precision for speeding up - https://pytorch.org/docs/stable/amp.html
 device_ids = "0,1" # set the gpu devices on which you want to train your model
 max_gumbel_temperature = 2.0
@@ -45,7 +45,7 @@ hub_model_id = ""
 [train_dataset]
 path = "dataset.dataset.CustomDataset"
     [train_dataset.args]
-    files = "D:\\MARONE\\WOLOF\\SPEECH_TO_TEXT\\DATA\\CLEANED\\WOLOF_AUDIO_TRANS\\train_data.csv"
+    files = "D:\\MARONE\\WOLOF\\SPEECH_TO_TEXT\\DATA\\CLEANED\\WOLOF_AUDIO\\datasets\\train_dataset.csv"
     sep = "|"
     audio_column_name = "path"
     sr = 16000
@@ -64,7 +64,7 @@ path = "dataset.dataset.CustomDataset"
 [val_dataset]
 path = "dataset.dataset.CustomDataset"
     [val_dataset.args]
-    files = "D:\\MARONE\\WOLOF\\SPEECH_TO_TEXT\\DATA\\CLEANED\\WOLOF_AUDIO_TRANS\\validation_data.csv"
+    files = "D:\\MARONE\\WOLOF\\SPEECH_TO_TEXT\\DATA\\CLEANED\\WOLOF_AUDIO\\datasets\\validation_dataset.csv"
     sep = "|"
     sr = 16000
     audio_column_name = "path"
@@ -81,10 +81,10 @@ path = "dataset.dataset.CustomDataset"
 
 
 [optimizer]
-learning_rate = 0.01
+learning_rate = 0.005
 adam_beta1 = 0.9
 adam_beta2 = 0.98
-adam_epsilon = 1e-05
+adam_epsilon = 1e-06
 
 [scheduler] 
 lr_scheduler_type = "linear"

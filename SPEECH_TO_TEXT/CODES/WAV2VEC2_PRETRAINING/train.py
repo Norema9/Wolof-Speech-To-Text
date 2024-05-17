@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 from tqdm import tqdm
 import toml
-import torch.multiprocessing as mp
+#import torch.multiprocessing as mp
 import pandas as pd
 from itertools import islice
 
@@ -117,12 +117,56 @@ class DataCollatorForWav2Vec2Pretraining:
             This is especially useful to enable the use of Tensor Cores on NVIDIA hardware with compute capability >=
             7.5 (Volta).
     """
-
-    model: Wav2Vec2ForPreTraining
+    
+    config:Wav2Vec2Config
     feature_extractor: Wav2Vec2FeatureExtractor
     padding: Union[bool, str] = "longest"
     pad_to_multiple_of: Optional[int] = None
-    mask_time_prob: float = 0.5
+    mask_time_prob: float = 0.6
+        
+        
+    def _get_feat_extract_output_lengths(
+        self, input_lengths: Union[torch.LongTensor, int], add_adapter: Optional[bool] = None
+    ):
+        """
+        Computes the output length of the convolutional layers
+        """
+
+        add_adapter = self.config.add_adapter if add_adapter is None else add_adapter
+
+        def _conv_out_length(input_length, kernel_size, stride):
+            # 1D convolutional layer output length formula taken
+            # from https://pytorch.org/docs/stable/generated/torch.nn.Conv1d.html
+            return torch.div(input_length - kernel_size, stride, rounding_mode="floor") + 1
+
+        for kernel_size, stride in zip(self.config.conv_kernel, self.config.conv_stride):
+            input_lengths = _conv_out_length(input_lengths, kernel_size, stride)
+
+        if add_adapter:
+            for _ in range(self.config.num_adapter_layers):
+                input_lengths = _conv_out_length(input_lengths, 1, self.config.adapter_stride)
+
+        return input_lengths
+    
+    def _get_feature_vector_attention_mask(
+        self, feature_vector_length: int, attention_mask: torch.LongTensor, add_adapter=None
+    ):
+        # Effectively attention_mask.sum(-1), but not inplace to be able to run
+        # on inference mode.
+        non_padded_lengths = attention_mask.cumsum(dim=-1)[:, -1]
+
+        output_lengths = self._get_feat_extract_output_lengths(non_padded_lengths, add_adapter=add_adapter)
+        output_lengths = output_lengths.to(torch.long)
+
+        batch_size = attention_mask.shape[0]
+
+        attention_mask = torch.zeros(
+            (batch_size, feature_vector_length), dtype=attention_mask.dtype, device=attention_mask.device
+        )
+        # these two operations makes sure that all values before the output lengths idxs are attended to
+        attention_mask[(torch.arange(attention_mask.shape[0], device=attention_mask.device), output_lengths - 1)] = 1
+        attention_mask = attention_mask.flip([-1]).cumsum(-1).flip([-1]).bool()
+        return attention_mask
 
     def __call__(self, features: List[Dict[str, Union[List[int], torch.Tensor]]]) -> Dict[str, torch.Tensor]:
         # reformat list to dict and set to pytorch format
@@ -136,30 +180,30 @@ class DataCollatorForWav2Vec2Pretraining:
         device = batch["input_values"].device
         batch_size = batch["input_values"].shape[0]
 
-        mask_indices_seq_length = self.model._get_feat_extract_output_lengths(batch["input_values"].shape[-1])
+        mask_indices_seq_length = self._get_feat_extract_output_lengths(batch["input_values"].shape[-1])
         # make sure masked sequence length is a Python scalar
         mask_indices_seq_length = int(mask_indices_seq_length)
 
         # make sure that no loss is computed on padded inputs
         if batch.get("attention_mask") is not None:
             # compute real output lengths according to convolution formula
-            batch["sub_attention_mask"] = self.model._get_feature_vector_attention_mask(
+            batch["sub_attention_mask"] = self._get_feature_vector_attention_mask(
                 mask_indices_seq_length, batch["attention_mask"]
             )
 
         features_shape = (batch_size, mask_indices_seq_length)
+
         # sample randomly masked indices
         mask_time_indices = _compute_mask_indices(
             features_shape,
             self.mask_time_prob,
-            self.model.config.mask_time_length,
+            self.config.mask_time_length,
             attention_mask=batch.get("sub_attention_mask")
         )
-        
         # sample negative indices
         sampled_negative_indices = _sample_negative_indices(
             features_shape,
-            self.model.config.num_negatives,
+            self.config.num_negatives,
             mask_time_indices=mask_time_indices,
         )
         batch["mask_time_indices"] = torch.tensor(mask_time_indices, dtype=torch.long, device=device)
@@ -167,7 +211,10 @@ class DataCollatorForWav2Vec2Pretraining:
 
         return batch
 
-
+def custom_enumerate(dl, start = 0):
+    for x in dl:
+        yield(start, x)
+        start += 1
 
 def main(config, resume):
     os.environ['MASTER_ADDR'] = 'localhost'
@@ -199,9 +246,11 @@ def main(config, resume):
     log_dir = os.path.join(config["meta"]["output_dir"], 'log_dir')
     config_dir = os.path.join(config["meta"]["output_dir"], 'configs')
     accelerator_dir = os.path.join(config["meta"]["output_dir"], 'acelerator')
+    
 
     # Initialize the accelerator. We will let the accelerator handle device placement for us in this example.
-    accelerator = Accelerator(dispatch_batches=False)
+    accelerator = Accelerator(dispatch_batches=False, mixed_precision = "fp16")
+
     
     logger.info(accelerator.state, main_process_only=False)
     if accelerator.is_local_main_process:
@@ -285,14 +334,14 @@ def main(config, resume):
             model = model.from_pretrained(config["meta"]["model_name_or_path"])
         except:
             print("!!!!! Warning: Pretrained model may not exist. Start training from Scratch")
-
+    
     # Activate gradient checkpointing if needed
     if config["meta"]["gradient_checkpointing"]:
         model.gradient_checkpointing_enable()
 
     # Define data collator, optimizer and scheduler
     data_collator = DataCollatorForWav2Vec2Pretraining(
-        model=model, feature_extractor=feature_extractor, pad_to_multiple_of = pad_to_multiple_of, mask_time_prob = mask_time_prob
+        config=config_wav, feature_extractor=feature_extractor, pad_to_multiple_of = pad_to_multiple_of, mask_time_prob = mask_time_prob
     )
 
     train_dataloader = DataLoader(
@@ -300,9 +349,9 @@ def main(config, resume):
         collate_fn=data_collator,
         batch_size=config["train_dataset"]["dataloader"]["per_device_train_batch_size"],
         shuffle=True,
-        num_workers=0,
+        num_workers=16,
         pin_memory=True,
-        # prefetch_factor=16
+        prefetch_factor=16
     )
 
     eval_dataloader = DataLoader(
@@ -360,7 +409,6 @@ def main(config, resume):
 
     # Only show the progress bar once on each machine.
     completed_steps = checkpoint['completed_steps'] + 1 if resume else 0
-    resume_steps = checkpoint['completed_steps'] + 1 if resume else 0
     starting_epoch = checkpoint['epoch'] if resume else 0
     progress_bar = tqdm(initial = completed_steps, total = max_train_steps, disable=not accelerator.is_local_main_process)
 
@@ -372,9 +420,7 @@ def main(config, resume):
             print(f"\nEpoch {epoch}: ")
         model.train()
         
-        if resume:
-            train_dataloader = islice(train_dataloader, resume_steps, None) # start the train_loader from the last iteration
-        
+        # for step, batch in custom_enumerate(train_dataloader, start = (completed_steps*gradient_accumulation_steps) % math.ceil(len(train_dataloader))):
         for step, batch in enumerate(train_dataloader):
             num_losses = batch["mask_time_indices"].sum()
             sub_attention_mask = batch.pop("sub_attention_mask", None)
@@ -415,6 +461,7 @@ def main(config, resume):
                 else:
                     grad_norm = get_grad_norm(model.parameters(), scale)
 
+                
                 # update parameters
                 optimizer.step()
                 optimizer.zero_grad()
@@ -565,6 +612,15 @@ def main(config, resume):
 
 
 if __name__ == '__main__':
+    from torch import multiprocessing
+    try:
+        multiprocessing.set_start_method('spawn')
+    except RuntimeError:
+        pass
+
+    mp_lock = multiprocessing.RLock()
+    
+    
     args = argparse.ArgumentParser(description='ASR TRAIN ARGS')
     args.add_argument('-c', '--config', required=True, type=str,
                       help='config file path (default: None)')
