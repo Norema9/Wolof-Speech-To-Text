@@ -44,6 +44,7 @@ def main(rank, world_size, config, resume, preload):
     max_clip_grad_norm = config["meta"]["max_clip_grad_norm"]
     save_dir =  os.path.join(config["meta"]["save_dir"], config["meta"]['name'] + '/checkpoints')
     log_dir = os.path.join(config["meta"]["save_dir"], config["meta"]['name'] + '/log_dir')
+    vocabs = os.path.join(save_dir, "vocabs")
     
     if rank == 0:
         # Creatr dirs
@@ -51,6 +52,8 @@ def main(rank, world_size, config, resume, preload):
             os.makedirs(save_dir)
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
+        os.makedirs(vocabs, exist_ok=True)
+            
             
         # Store config file
         config_name = strftime("%Y-%m-%d %H~%M~%S", gmtime()).replace(' ', '_') + '.toml'
@@ -75,12 +78,12 @@ def main(rank, world_size, config, resume, preload):
 
     train_base_ds = initialize_module(config["train_dataset"]["path"], args=config["train_dataset"]["args"])
     vocab_dict = train_base_ds.get_vocab_dict()
-    with open(r'CODES\MODELS\WAV2VEC2\vocabs\vocab.json', 'w+') as f:
+    with open(os.path.join(vocabs, 'vocab.json'), 'w+') as f:
         json.dump(vocab_dict, f)
         f.close()
     dist.barrier()
     # Create processor
-    tokenizer = Wav2Vec2CTCTokenizer(r'CODES\MODELS\WAV2VEC2\vocabs\vocab.json', 
+    tokenizer = Wav2Vec2CTCTokenizer(os.path.join(vocabs, 'vocab.json'), 
                                     **config["special_tokens"],
                                     word_delimiter_token="|")
     feature_extractor = Wav2Vec2FeatureExtractor.from_pretrained(pretrained_path)
@@ -129,7 +132,7 @@ def main(rank, world_size, config, resume, preload):
     )
     
     # freeze the wav2vec feature encoder, if you have small dataset, this helps a lot
-    # model.freeze_feature_encoder()
+    model.freeze_feature_encoder()
     model.config.ctc_zero_infinity = True
     # DDP for multi-processing
     model = DDP(model.to(rank), device_ids=[rank], find_unused_parameters=True)

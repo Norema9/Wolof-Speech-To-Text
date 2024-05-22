@@ -1,10 +1,11 @@
 [meta]
-name = "ASR" 
-pretrained_path = "facebook/wav2vec2-xls-r-300m"
+name = "ASR_NEW" 
+#pretrained_path = "facebook/wav2vec2-xls-r-300m"
+pretrained_path = "D:\\MARONE\\WOLOF\\SPEECH_TO_TEXT\\MODELS\\WAV2VEC2_PRETRAINED_NEW_3\\checkpoints\\saved_model_epoch_10"
 seed = 19
 epochs = 30
-save_dir = "CODES\\MODELS\\WAV2VEC2" 
-gradient_accumulation_steps = 4
+save_dir = "MODELS\\WAV2VEC2"
+gradient_accumulation_steps = 8
 use_amp = false # Whether to use Automatic Mixed Precision for speeding up - https://pytorch.org/docs/stable/amp.html
 device_ids = "0,1" # set the gpu devices on which you want to train your model
 sr = 16000
@@ -29,7 +30,7 @@ blocking = false # whether to wait until the model is uploaded (this will be ver
     # you can pass your auth_token from your huggingface account to use_auth_token.
     # Otherwise you need to run ```huggingface-cli login``` command to log in
     [huggingface.args]
-    local_dir = "D:\\MARONE\\WOLOF\\SPEECH_TO_TEXT\\CODES\\MODELS\\WAV2VEC2\\huggingface-hub" # where your repo places in local
+    local_dir = "D:\\MARONE\\WOLOF\\SPEECH_TO_TEXT\\MODELS\\WAV2VEC2\\ASR_NEW\\huggingface-hub" # where your repo places in local
     use_auth_token = true # you must provide the auth_token of your huggingface account. 
     clone_from = "" # path to your repo in huggingface
 
@@ -47,7 +48,7 @@ path = "base.base_dataset.BaseDataset"
     nb_workers = 16
     
     [train_dataset.dataloader]
-    batch_size = 2
+    batch_size = 5
     num_workers = 16
     pin_memory = true 
     drop_last = true
