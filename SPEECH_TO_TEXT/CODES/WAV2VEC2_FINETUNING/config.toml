@@ -1,12 +1,12 @@
 [meta]
-name = "ASR_NEW" 
+name = "ASR_4" 
 #pretrained_path = "facebook/wav2vec2-xls-r-300m"
-pretrained_path = "D:\\MARONE\\WOLOF\\SPEECH_TO_TEXT\\MODELS\\WAV2VEC2_PRETRAINED_NEW_3\\checkpoints\\saved_model_epoch_10"
+pretrained_path = "D:\\MARONE\\WOLOF\\SPEECH_TO_TEXT\\MODELS\\PRETRAINED_WAV2VEC\\WAV2VEC2_PRETRAINED_NEW_3\\checkpoints\\saved_model_epoch_10"
 seed = 19
 epochs = 30
 save_dir = "MODELS\\WAV2VEC2"
 gradient_accumulation_steps = 8
-use_amp = false # Whether to use Automatic Mixed Precision for speeding up - https://pytorch.org/docs/stable/amp.html
+use_amp = true # Whether to use Automatic Mixed Precision for speeding up - https://pytorch.org/docs/stable/amp.html
 device_ids = "0,1" # set the gpu devices on which you want to train your model
 sr = 16000
 max_clip_grad_norm = 5.0 # torch.nn.utils.clip_grad_norm_
@@ -76,11 +76,11 @@ path = "base.base_dataset.BaseDataset"
 
  
 [optimizer]
-lr = 1e-6
+lr = 1e-5
 
 
 [scheduler] 
-max_lr = 5e-5
+max_lr = 5e-4
     
 
 [trainer]
