@@ -11,7 +11,7 @@ import datetime
 warnings.filterwarnings('ignore')
 os.chdir(r"D:\MARONE\WOLOF\SPEECH_TO_TEXT")
 # to add the path of the different on module
-sys.path.append(r'CODES\WAV2VEC2_FINETUNING')
+sys.path.append(r'CODES\WHISPER')
 
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data import DataLoader
