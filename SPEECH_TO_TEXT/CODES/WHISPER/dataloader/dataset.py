@@ -6,8 +6,9 @@ from transformers import WhisperProcessor
 
 class DefaultCollate:
     """ DataCollatorSpeechSeq2SeqWithPadding """
-    def __init__(self, processor:WhisperProcessor) -> None:
+    def __init__(self, processor:WhisperProcessor, sr) -> None:
         self.processor = processor
+        self.sr = sr
 
     def __call__(self, features: List[Dict[str, Union[List[int], torch.Tensor]]]) -> Dict[str, torch.Tensor]:
         # split inputs and labels since they have to be of different lengths and need different padding methods

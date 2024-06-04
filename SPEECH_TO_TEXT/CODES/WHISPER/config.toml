@@ -1,6 +1,6 @@
 [meta]
 name = "ASR_1" 
-#pretrained_path = "openai/whisper-small"
+pretrained_path = "openai/whisper-small"
 seed = 19
 epochs = 30
 save_dir = "MODELS\\WHISPER"
@@ -29,7 +29,7 @@ blocking = false # whether to wait until the model is uploaded (this will be ver
     # you can pass your auth_token from your huggingface account to use_auth_token.
     # Otherwise you need to run ```huggingface-cli login``` command to log in
     [huggingface.args]
-    local_dir = "D:\\MARONE\\WOLOF\\SPEECH_TO_TEXT\\MODELS\\WAV2VEC2\\ASR_NEW\\huggingface-hub" # where your repo places in local
+    local_dir = "D:\\MARONE\\WOLOF\\SPEECH_TO_TEXT\\MODELS\\WHISPER\\ASR_1\\huggingface-hub" # where your repo places in local
     use_auth_token = true # you must provide the auth_token of your huggingface account. 
     clone_from = "" # path to your repo in huggingface
 

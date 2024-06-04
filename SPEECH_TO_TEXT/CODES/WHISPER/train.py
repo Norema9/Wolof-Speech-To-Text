@@ -44,7 +44,7 @@ def main(rank, world_size, config, resume, preload):
     max_clip_grad_norm = config["meta"]["max_clip_grad_norm"]
     save_dir =  os.path.join(config["meta"]["save_dir"], config["meta"]['name'] + '/checkpoints')
     log_dir = os.path.join(config["meta"]["save_dir"], config["meta"]['name'] + '/log_dir')
-    vocabs = os.path.join(save_dir, "vocabs")
+    tokenizer = os.path.join(config["meta"]["save_dir"], 'tokenizer')
     
     if rank == 0:
         # Creatr dirs
@@ -52,7 +52,6 @@ def main(rank, world_size, config, resume, preload):
             os.makedirs(save_dir)
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
-        os.makedirs(vocabs, exist_ok=True)
             
             
         # Store config file
@@ -75,22 +74,21 @@ def main(rank, world_size, config, resume, preload):
 
     config["train_dataset"]["args"]["special_tokens"] = config["special_tokens"]
     config["val_dataset"]["args"]["special_tokens"] = config["special_tokens"]
-
-    train_base_ds = initialize_module(config["train_dataset"]["path"], args=config["train_dataset"]["args"])
-    vocab_dict = train_base_ds.get_vocab_dict()
-    with open(os.path.join(vocabs, 'vocab.json'), 'w+') as f:
-        json.dump(vocab_dict, f)
-        f.close()
-    dist.barrier()
-    # Create processor
-    tokenizer = WhisperTokenizer(os.path.join(vocabs, 'vocab.json'), 
-                                    **config["special_tokens"],
-                                    word_delimiter_token="|")
+    
     # tokenizer = WhisperTokenizer.from_pretrained("openai/whisper-small", language="Hindi", task="transcribe")
     feature_extractor = WhisperFeatureExtractor.from_pretrained(pretrained_path)
 
     config["train_dataset"]["args"]["feature_extractor"] = feature_extractor
     config["val_dataset"]["args"]["feature_extractor"] = feature_extractor
+
+    train_base_ds = initialize_module(config["train_dataset"]["path"], args=config["train_dataset"]["args"])
+    dist.barrier()
+    
+    # Create processor
+    tokenizer = WhisperTokenizer(os.path.join(tokenizer, 'vocab.json'),
+                                 os.path.join(tokenizer, 'merges.txt'),
+                                    **config["special_tokens"],
+                                    word_delimiter_token="|")
 
     processor = WhisperProcessor(feature_extractor=feature_extractor, tokenizer=tokenizer)
     default_collate = DefaultCollate(processor, config['meta']['sr'])
@@ -129,12 +127,12 @@ def main(rank, world_size, config, resume, preload):
 
     model = WhisperForConditionalGeneration.from_pretrained(pretrained_path)
 
-    model_config = model.get_config()
-    model_config['vocab_size '] = len(tokenizer)
-    model_config['pad_token_id   '] = tokenizer.pad_token_id
-    model_config['bos_token_id  '] = config["special_tokens"]["bos_token_id"]
-    model_config['eos_token_id  '] = config["special_tokens"]["eos_token_id"]
-    model.set_config(model_config)
+    model_config = model.config
+    model_config.vocab_size = len(tokenizer)
+    model_config.pad_token_id = tokenizer.pad_token_id
+    model_config.bos_token_id = tokenizer.bos_token_id
+    model_config.eos_token_id = tokenizer.eos_token_id
+    model.config = model_config
 
     model.config.forced_decoder_ids = None
     model.config.suppress_tokens = []

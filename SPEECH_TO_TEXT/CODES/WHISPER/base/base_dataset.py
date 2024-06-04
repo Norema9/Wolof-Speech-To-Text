@@ -73,22 +73,6 @@ class BaseDataset(Dataset):
             cleaned_transcript = regex.sub(key, value, cleaned_transcript) + " "
         return cleaned_transcript
 
-    def get_vocab_dict(self) -> Dict[int, str]:
-        # Read https://huggingface.co/blog/fine-tune-wav2vec2-english for more information
-        all_text = " ".join(list(self.df["transcript"]))
-        #  remove special tokens in all_text, otherwise it will tokenize the special tokens' characters. Eg: <unk> -> '<', 'u', 'n', 'k', '>'
-        for v in self.special_tokens.values():
-            all_text = all_text.replace(v, '')
-        vocab_list = list(set(all_text))
-        vocab_list.sort()
-        vocab_dict = {v: k for k, v in enumerate(vocab_list)}
-
-        vocab_dict["|"] = vocab_dict[" "]
-        del vocab_dict[" "]
-        for v in self.special_tokens.values():
-            vocab_dict[v] = len(vocab_dict)
-        print(vocab_dict)
-        return vocab_dict
 
     def preload_dataset(self, paths, sr) -> List:
         wavs = []
