@@ -44,7 +44,6 @@ def main(rank, world_size, config, resume, preload):
     max_clip_grad_norm = config["meta"]["max_clip_grad_norm"]
     save_dir =  os.path.join(config["meta"]["save_dir"], config["meta"]['name'] + '/checkpoints')
     log_dir = os.path.join(config["meta"]["save_dir"], config["meta"]['name'] + '/log_dir')
-    tokenizer = os.path.join(config["meta"]["save_dir"], 'tokenizer')
     
     if rank == 0:
         # Creatr dirs
@@ -71,12 +70,8 @@ def main(rank, world_size, config, resume, preload):
 
     config["train_dataset"]["args"]["dist"] = dist
     config["val_dataset"]["args"]["dist"] = dist
-
-    config["train_dataset"]["args"]["special_tokens"] = config["special_tokens"]
-    config["val_dataset"]["args"]["special_tokens"] = config["special_tokens"]
     
-    # tokenizer = WhisperTokenizer.from_pretrained("openai/whisper-small", language="Hindi", task="transcribe")
-    feature_extractor = WhisperFeatureExtractor.from_pretrained(pretrained_path)
+    feature_extractor = WhisperFeatureExtractor.from_pretrained(pretrained_path, language="wolof", task="transcribe")
 
     config["train_dataset"]["args"]["feature_extractor"] = feature_extractor
     config["val_dataset"]["args"]["feature_extractor"] = feature_extractor
@@ -84,13 +79,10 @@ def main(rank, world_size, config, resume, preload):
     train_base_ds = initialize_module(config["train_dataset"]["path"], args=config["train_dataset"]["args"])
     dist.barrier()
     
+    tokenizer = WhisperTokenizer.from_pretrained(pretrained_path, language="wolof", task="transcribe")
     # Create processor
-    tokenizer = WhisperTokenizer(os.path.join(tokenizer, 'vocab.json'),
-                                 os.path.join(tokenizer, 'merges.txt'),
-                                    **config["special_tokens"],
-                                    word_delimiter_token="|")
-
-    processor = WhisperProcessor(feature_extractor=feature_extractor, tokenizer=tokenizer)
+    
+    processor = WhisperProcessor.from_pretrained(pretrained_path, language="id", task="transcribe")
     default_collate = DefaultCollate(processor, config['meta']['sr'])
 
     # Create train dataloader
@@ -126,13 +118,6 @@ def main(rank, world_size, config, resume, preload):
 
 
     model = WhisperForConditionalGeneration.from_pretrained(pretrained_path)
-
-    model_config = model.config
-    model_config.vocab_size = len(tokenizer)
-    model_config.pad_token_id = tokenizer.pad_token_id
-    model_config.bos_token_id = tokenizer.bos_token_id
-    model_config.eos_token_id = tokenizer.eos_token_id
-    model.config = model_config
 
     model.config.forced_decoder_ids = None
     model.config.suppress_tokens = []

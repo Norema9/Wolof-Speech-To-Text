@@ -19,7 +19,7 @@ from dataloader.dataset import Dataset as InstanceDataset
 
 
 class BaseDataset(Dataset):
-    def __init__(self, rank, dist, feature_extractor, path, sr, delimiter, special_tokens, min_duration = -np.inf, max_duration = np.inf, preload_data = False, transform = None, nb_workers = 4):
+    def __init__(self, rank, dist, feature_extractor, path, sr, delimiter, min_duration = -np.inf, max_duration = np.inf, preload_data = False, transform = None, nb_workers = 4):
         self.rank = rank
         self.dist = dist
         self.feature_extractor = feature_extractor
@@ -37,7 +37,6 @@ class BaseDataset(Dataset):
         self.min_duration = min_duration
         self.max_duration = max_duration
         self.df = self.load_data(path, delimiter)
-        self.special_tokens = special_tokens
         pandarallel.initialize(progress_bar=True, nb_workers = nb_workers)
 
         if min_duration != -np.inf or max_duration != np.inf:
