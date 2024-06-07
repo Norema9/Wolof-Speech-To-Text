@@ -56,4 +56,3 @@ class Dataset:
         features = {"input_features": feature, "labels": item["transcript"]}
         
         return features
-

@@ -19,11 +19,11 @@ from dataloader.dataset import Dataset as InstanceDataset
 
 
 class BaseDataset(Dataset):
-    def __init__(self, rank, dist, feature_extractor, path, sr, delimiter, min_duration = -np.inf, max_duration = np.inf, preload_data = False, transform = None, nb_workers = 4):
+    def __init__(self, rank, dist, path, sr, feature_extractor, delimiter, min_duration = -np.inf, max_duration = np.inf, preload_data = False, transform = None, nb_workers = 4):
         self.rank = rank
         self.dist = dist
-        self.feature_extractor = feature_extractor
         self.sr = sr
+        self.feature_extractor = feature_extractor
         # Special characters to remove in your data 
         self.chars_to_ignore = r'[,?.!\-;:"“%\'�]'
         self.chars_to_ignore = r'[кɲớˈ\'\xa0\r\n]'

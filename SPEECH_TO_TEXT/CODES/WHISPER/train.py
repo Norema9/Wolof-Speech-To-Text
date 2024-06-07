@@ -19,7 +19,7 @@ from time import gmtime, strftime
 from utils.utils import *
 from utils.metric import Metric
 from dataloader.dataset import DefaultCollate
-from transformers import WhisperFeatureExtractor, WhisperTokenizer, WhisperProcessor, WhisperForConditionalGeneration
+from transformers import WhisperFeatureExtractor, WhisperTokenizer, WhisperProcessor, WhisperForConditionalGeneration,  WhisperModel
 
 def setup(rank, world_size):
     os.environ['MASTER_ADDR'] = 'localhost'
@@ -44,6 +44,8 @@ def main(rank, world_size, config, resume, preload):
     max_clip_grad_norm = config["meta"]["max_clip_grad_norm"]
     save_dir =  os.path.join(config["meta"]["save_dir"], config["meta"]['name'] + '/checkpoints')
     log_dir = os.path.join(config["meta"]["save_dir"], config["meta"]['name'] + '/log_dir')
+    tokenizer_path = os.path.join(config["meta"]["save_dir"], 'tokenizer')
+    save_token = os.path.join(config["meta"]["save_dir"], config["meta"]['name'],  "tokenizer")
     
     if rank == 0:
         # Creatr dirs
@@ -51,6 +53,7 @@ def main(rank, world_size, config, resume, preload):
             os.makedirs(save_dir)
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
+        os.makedirs(save_token, exist_ok=True)
             
             
         # Store config file
@@ -71,18 +74,21 @@ def main(rank, world_size, config, resume, preload):
     config["train_dataset"]["args"]["dist"] = dist
     config["val_dataset"]["args"]["dist"] = dist
     
-    feature_extractor = WhisperFeatureExtractor.from_pretrained(pretrained_path, language="wolof", task="transcribe")
-
+    feature_extractor = WhisperFeatureExtractor.from_pretrained(pretrained_path, task="transcribe")
+    
     config["train_dataset"]["args"]["feature_extractor"] = feature_extractor
     config["val_dataset"]["args"]["feature_extractor"] = feature_extractor
 
     train_base_ds = initialize_module(config["train_dataset"]["path"], args=config["train_dataset"]["args"])
     dist.barrier()
     
-    tokenizer = WhisperTokenizer.from_pretrained(pretrained_path, language="wolof", task="transcribe")
+    tokenizer = WhisperTokenizer.from_pretrained(pretrained_path, task="transcribe")
+    # tokenizer = PreTrainedTokenizerFast.from_pretrained(tokenizer_path, **special_tokens)
     # Create processor
+    processor = WhisperProcessor(feature_extractor=feature_extractor, tokenizer=tokenizer)
+    tokenizer.save_pretrained(save_token)
     
-    processor = WhisperProcessor.from_pretrained(pretrained_path, language="id", task="transcribe")
+    # Create the collator
     default_collate = DefaultCollate(processor, config['meta']['sr'])
 
     # Create train dataloader
@@ -117,7 +123,7 @@ def main(rank, world_size, config, resume, preload):
     )
 
 
-    model = WhisperForConditionalGeneration.from_pretrained(pretrained_path)
+    model =  WhisperForConditionalGeneration.from_pretrained(pretrained_path)
 
     model.config.forced_decoder_ids = None
     model.config.suppress_tokens = []
