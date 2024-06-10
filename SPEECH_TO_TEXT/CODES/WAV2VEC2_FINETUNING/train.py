@@ -134,6 +134,7 @@ def main(rank, world_size, config, resume, preload):
     # freeze the wav2vec feature encoder, if you have small dataset, this helps a lot
     model.freeze_feature_encoder()
     model.config.ctc_zero_infinity = True
+    
     # DDP for multi-processing
     model = DDP(model.to(rank), device_ids=[rank], find_unused_parameters=True)
 

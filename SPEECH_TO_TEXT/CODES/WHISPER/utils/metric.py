@@ -7,7 +7,7 @@ class Metric:
         self.wer_metric = load_metric("wer")
     def __call__(self, logits, label_ids):
         pred_ids = torch.argmax(logits, axis=-1)
-        label_ids[label_ids == -100] = self.processor.tokenizer.pad_token_id
+        label_ids[label_ids == -100] = self.tokenizer.pad_token_id
 
         # we do not want to group tokens when computing the metrics
         pred_strs = self.tokenizer.batch_decode(pred_ids, skip_special_tokens=True)

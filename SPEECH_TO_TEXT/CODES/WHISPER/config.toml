@@ -1,5 +1,5 @@
 [meta]
-name = "ASR_1" 
+name = "ASR_3" 
 pretrained_path = "openai/whisper-small"
 seed = 19
 epochs = 30
@@ -9,12 +9,6 @@ use_amp = true # Whether to use Automatic Mixed Precision for speeding up - http
 device_ids = "0,1" # set the gpu devices on which you want to train your model
 sr = 16000
 max_clip_grad_norm = 5.0 # torch.nn.utils.clip_grad_norm_
-
-[special_tokens]
-bos_token = "<bos>"
-eos_token = "<eos>"
-unk_token = "<unk>"
-pad_token = "<pad>"
 
 
 # Not available yet
@@ -29,7 +23,7 @@ blocking = false # whether to wait until the model is uploaded (this will be ver
     # you can pass your auth_token from your huggingface account to use_auth_token.
     # Otherwise you need to run ```huggingface-cli login``` command to log in
     [huggingface.args]
-    local_dir = "D:\\MARONE\\WOLOF\\SPEECH_TO_TEXT\\MODELS\\WHISPER\\ASR_1\\huggingface-hub" # where your repo places in local
+    local_dir = "D:\\MARONE\\WOLOF\\SPEECH_TO_TEXT\\MODELS\\WHISPER\\ASR_3\\huggingface-hub" # where your repo places in local
     use_auth_token = true # you must provide the auth_token of your huggingface account. 
     clone_from = "" # path to your repo in huggingface
 
@@ -47,7 +41,7 @@ path = "base.base_dataset.BaseDataset"
     nb_workers = 16
     
     [train_dataset.dataloader]
-    batch_size = 5
+    batch_size = 1
     num_workers = 16
     pin_memory = true 
     drop_last = true
@@ -75,15 +69,15 @@ path = "base.base_dataset.BaseDataset"
 
  
 [optimizer]
-lr = 1e-5
+lr = 1e-7
 
 
 [scheduler] 
-max_lr = 5e-4
+max_lr = 5e-5
     
 
 [trainer]
 path = "trainer.trainer.Trainer"
     [trainer.args]
-    validation_interval = 500
+    validation_interval = 100
     save_max_metric_score = false 

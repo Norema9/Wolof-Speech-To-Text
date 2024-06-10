@@ -19,7 +19,7 @@ from time import gmtime, strftime
 from utils.utils import *
 from utils.metric import Metric
 from dataloader.dataset import DefaultCollate
-from transformers import WhisperFeatureExtractor, WhisperTokenizer, WhisperProcessor, WhisperForConditionalGeneration
+from transformers import WhisperFeatureExtractor, WhisperTokenizer, WhisperProcessor, WhisperForConditionalGeneration,  WhisperModel
 
 def setup(rank, world_size):
     os.environ['MASTER_ADDR'] = 'localhost'
@@ -44,7 +44,9 @@ def main(rank, world_size, config, resume, preload):
     max_clip_grad_norm = config["meta"]["max_clip_grad_norm"]
     save_dir =  os.path.join(config["meta"]["save_dir"], config["meta"]['name'] + '/checkpoints')
     log_dir = os.path.join(config["meta"]["save_dir"], config["meta"]['name'] + '/log_dir')
-    tokenizer = os.path.join(config["meta"]["save_dir"], 'tokenizer')
+    custom_tokenizer_path = os.path.join(config["meta"]["save_dir"], 'tokenizer')
+    tokenizer_path = os.path.join(config["meta"]["save_dir"], config["meta"]['name'],  "tokenizer")
+    pretrained_tokenizer_path = os.path.join(config["meta"]["save_dir"], config["meta"]['name'],  "pretrained_tokenizer")
     
     if rank == 0:
         # Creatr dirs
@@ -52,6 +54,7 @@ def main(rank, world_size, config, resume, preload):
             os.makedirs(save_dir)
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
+        os.makedirs(save_token, exist_ok=True)
             
             
         # Store config file
@@ -71,26 +74,62 @@ def main(rank, world_size, config, resume, preload):
 
     config["train_dataset"]["args"]["dist"] = dist
     config["val_dataset"]["args"]["dist"] = dist
-
-    config["train_dataset"]["args"]["special_tokens"] = config["special_tokens"]
-    config["val_dataset"]["args"]["special_tokens"] = config["special_tokens"]
     
-    # tokenizer = WhisperTokenizer.from_pretrained("openai/whisper-small", language="Hindi", task="transcribe")
-    feature_extractor = WhisperFeatureExtractor.from_pretrained(pretrained_path)
-
+    feature_extractor = WhisperFeatureExtractor.from_pretrained(pretrained_path, task="transcribe")
+    
     config["train_dataset"]["args"]["feature_extractor"] = feature_extractor
     config["val_dataset"]["args"]["feature_extractor"] = feature_extractor
 
     train_base_ds = initialize_module(config["train_dataset"]["path"], args=config["train_dataset"]["args"])
     dist.barrier()
     
-    # Create processor
-    tokenizer = WhisperTokenizer(os.path.join(tokenizer, 'vocab.json'),
-                                 os.path.join(tokenizer, 'merges.txt'),
-                                    **config["special_tokens"],
-                                    word_delimiter_token="|")
+    
+     # Initialize tokenizers
+    custom_tokenizer =  WhisperTokenizer(vocab_file=os.path.join(custom_tokenizer_path,  "vocab.json"), merges_file=os.path.join(custom_tokenizer_path,  "merges.txt"))
+    pretrained_tokenizer = WhisperTokenizer.from_pretrained(pretrained_path, task="transcribe")
+    
+    os.makedirs(pretrained_tokenizer_path, exist_ok=True)
+    pretrained_tokenizer.save_pretrained(pretrained_tokenizer_path)
 
+    # Load custom merges directly from the file
+    custom_merges_path = os.path.join(custom_tokenizer_path, "merges.txt")
+    with open(custom_merges_path, 'r', encoding='utf-8') as merges_file:
+        custom_merges = [tuple(line.split()) for line in merges_file.read().splitlines()]
+
+    # Load pretrained merges directly from the file
+    pretrained_merges_path = os.path.join(pretrained_tokenizer_path, "merges.txt")
+    with open(pretrained_merges_path, 'r', encoding='utf-8') as merges_file:
+        pretrained_merges = [tuple(line.split()) for line in merges_file.read().splitlines()]
+
+    # Extract vocabularies
+    custom_vocab = custom_tokenizer.get_vocab()
+    pretrained_vocab = pretrained_tokenizer.get_vocab()
+
+    # Combine vocabularies
+    combined_vocab = {**pretrained_vocab, **custom_vocab}
+
+    # Combine merges and remove duplicates while maintaining order
+    combined_merges = pretrained_merges + [merge for merge in custom_merges if merge not in pretrained_merges]
+
+    # Save the combined vocab and merges to temporary files
+    combined_vocab_path = os.path.join(tokenizer_path, "combined_vocab.json")
+    combined_merges_path = os.path.join(tokenizer_path, "combined_merges.txt")
+
+    with open(combined_vocab_path, 'w', encoding='utf-8') as vocab_file:
+        json.dump(combined_vocab, vocab_file, ensure_ascii=False)
+
+    with open(combined_merges_path, 'w', encoding='utf-8') as merges_file:
+        merges_file.write('\n'.join([' '.join(merge) for merge in combined_merges]))
+    
+    # Initialize the new tokenizer with the combined vocab and merges
+    tokenizer = WhisperTokenizer(vocab_file=combined_vocab_path, merges_file=combined_merges_path)
+    
+    # tokenizer = WhisperTokenizer.from_pretrained(pretrained_path, task="transcribe")
+    # Create processor
     processor = WhisperProcessor(feature_extractor=feature_extractor, tokenizer=tokenizer)
+    tokenizer.save_pretrained(tokenizer_path)
+    
+    # Create the collator
     default_collate = DefaultCollate(processor, config['meta']['sr'])
 
     # Create train dataloader
@@ -125,15 +164,10 @@ def main(rank, world_size, config, resume, preload):
     )
 
 
-    model = WhisperForConditionalGeneration.from_pretrained(pretrained_path)
-
-    model_config = model.config
-    model_config.vocab_size = len(tokenizer)
-    model_config.pad_token_id = tokenizer.pad_token_id
-    model_config.bos_token_id = tokenizer.bos_token_id
-    model_config.eos_token_id = tokenizer.eos_token_id
-    model.config = model_config
-
+    model =  WhisperForConditionalGeneration.from_pretrained(pretrained_path)
+    
+    
+    model.config.vocab_size = tokenizer.vocab_size
     model.config.forced_decoder_ids = None
     model.config.suppress_tokens = []
     

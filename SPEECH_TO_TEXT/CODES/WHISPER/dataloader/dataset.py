@@ -17,9 +17,9 @@ class DefaultCollate:
         batch = self.processor.feature_extractor.pad(input_features, return_tensors="pt")
 
         # get the tokenized label sequences
-        label_features = [{"input_ids": feature["labels"]} for feature in features]
+        label_features = [{"input_ids": self.processor.tokenizer.encode(feature["labels"], add_special_tokens=False)} for feature in features]
         # pad the labels to max length
-        labels_batch = self.processor.tokenizer.pad(label_features, return_tensors="pt")
+        labels_batch = self.processor.tokenizer.pad(label_features, return_tensors="pt", padding="longest")
 
         # replace padding with -100 to ignore loss correctly
         labels = labels_batch["input_ids"].masked_fill(labels_batch.attention_mask.ne(1), -100)
@@ -56,4 +56,3 @@ class Dataset:
         features = {"input_features": feature, "labels": item["transcript"]}
         
         return features
-
