@@ -20,6 +20,7 @@ from utils.utils import *
 from utils.metric import Metric
 from dataloader.dataset import DefaultCollate
 from transformers import WhisperFeatureExtractor, WhisperTokenizer, WhisperProcessor, WhisperForConditionalGeneration,  WhisperModel
+from transformers import WhisperFeatureExtractor, WhisperTokenizer, WhisperProcessor, WhisperForConditionalGeneration,  WhisperModel
 
 def setup(rank, world_size):
     os.environ['MASTER_ADDR'] = 'localhost'
@@ -55,6 +56,7 @@ def main(rank, world_size, config, resume, preload):
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
         os.makedirs(save_token, exist_ok=True)
+        os.makedirs(save_token, exist_ok=True)
             
             
         # Store config file
@@ -74,6 +76,8 @@ def main(rank, world_size, config, resume, preload):
 
     config["train_dataset"]["args"]["dist"] = dist
     config["val_dataset"]["args"]["dist"] = dist
+    
+    feature_extractor = WhisperFeatureExtractor.from_pretrained(pretrained_path, task="transcribe")
     
     feature_extractor = WhisperFeatureExtractor.from_pretrained(pretrained_path, task="transcribe")
     

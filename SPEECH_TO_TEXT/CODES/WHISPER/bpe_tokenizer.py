@@ -1,8 +1,8 @@
 import os
 from tokenizers import Tokenizer, models, trainers, pre_tokenizers
 
-
 def train_bpe_tokenizer(corpus_files, save_directory):
+
     # Initialize a BPE tokenizer
     tokenizer = Tokenizer(models.BPE())
 
