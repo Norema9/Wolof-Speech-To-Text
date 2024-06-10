@@ -20,7 +20,6 @@ from utils.utils import *
 from utils.metric import Metric
 from dataloader.dataset import DefaultCollate
 from transformers import WhisperFeatureExtractor, WhisperTokenizer, WhisperProcessor, WhisperForConditionalGeneration,  WhisperModel
-from transformers import WhisperFeatureExtractor, WhisperTokenizer, WhisperProcessor, WhisperForConditionalGeneration,  WhisperModel
 
 def setup(rank, world_size):
     os.environ['MASTER_ADDR'] = 'localhost'
@@ -45,7 +44,7 @@ def main(rank, world_size, config, resume, preload):
     max_clip_grad_norm = config["meta"]["max_clip_grad_norm"]
     save_dir =  os.path.join(config["meta"]["save_dir"], config["meta"]['name'] + '/checkpoints')
     log_dir = os.path.join(config["meta"]["save_dir"], config["meta"]['name'] + '/log_dir')
-    custom_tokenizer_path = os.path.join(config["meta"]["save_dir"], 'tokenizer')
+    custom_tokenizer_path = os.path.join(config["meta"]["save_dir"], 'custom_tokenizer')
     tokenizer_path = os.path.join(config["meta"]["save_dir"], config["meta"]['name'],  "tokenizer")
     pretrained_tokenizer_path = os.path.join(config["meta"]["save_dir"], config["meta"]['name'],  "pretrained_tokenizer")
     
@@ -55,8 +54,7 @@ def main(rank, world_size, config, resume, preload):
             os.makedirs(save_dir)
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
-        os.makedirs(save_token, exist_ok=True)
-        os.makedirs(save_token, exist_ok=True)
+        os.makedirs(tokenizer_path, exist_ok=True)
             
             
         # Store config file
@@ -76,8 +74,6 @@ def main(rank, world_size, config, resume, preload):
 
     config["train_dataset"]["args"]["dist"] = dist
     config["val_dataset"]["args"]["dist"] = dist
-    
-    feature_extractor = WhisperFeatureExtractor.from_pretrained(pretrained_path, task="transcribe")
     
     feature_extractor = WhisperFeatureExtractor.from_pretrained(pretrained_path, task="transcribe")
     
