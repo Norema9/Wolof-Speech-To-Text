@@ -1,0 +1,9 @@
+{
+  "bos_token": "<bos>",
+  "cls_token": "[CLS]",
+  "eos_token": "<eos>",
+  "mask_token": "[MASK]",
+  "pad_token": "<pad>",
+  "sep_token": "[SEP]",
+  "unk_token": "<unk>"
+}

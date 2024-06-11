@@ -1,0 +1,48 @@
+{
+  "added_tokens_decoder": {
+    "42": {
+      "content": "<bos>",
+      "lstrip": true,
+      "normalized": false,
+      "rstrip": true,
+      "single_word": false,
+      "special": false
+    },
+    "43": {
+      "content": "<eos>",
+      "lstrip": true,
+      "normalized": false,
+      "rstrip": true,
+      "single_word": false,
+      "special": false
+    },
+    "44": {
+      "content": "<unk>",
+      "lstrip": true,
+      "normalized": false,
+      "rstrip": true,
+      "single_word": false,
+      "special": false
+    },
+    "45": {
+      "content": "<pad>",
+      "lstrip": true,
+      "normalized": false,
+      "rstrip": true,
+      "single_word": false,
+      "special": false
+    }
+  },
+  "bos_token": "<bos>",
+  "clean_up_tokenization_spaces": true,
+  "do_lower_case": false,
+  "eos_token": "<eos>",
+  "model_max_length": 1000000000000000019884624838656,
+  "pad_token": "<pad>",
+  "processor_class": "Wav2Vec2Processor",
+  "replace_word_delimiter_char": " ",
+  "target_lang": null,
+  "tokenizer_class": "Wav2Vec2CTCTokenizer",
+  "unk_token": "<unk>",
+  "word_delimiter_token": "|"
+}
