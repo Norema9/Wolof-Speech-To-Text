@@ -79,5 +79,5 @@ max_lr = 5e-5
 [trainer]
 path = "trainer.trainer.Trainer"
     [trainer.args]
-    validation_interval = 100
+    validation_interval = 1000
     save_max_metric_score = false 

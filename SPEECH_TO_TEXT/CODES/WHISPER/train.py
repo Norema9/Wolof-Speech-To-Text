@@ -123,8 +123,8 @@ def main(rank, world_size, config, resume, preload):
     
     # Initialize the new tokenizer with the combined vocab and merges
     tokenizer = WhisperTokenizer(vocab_file=combined_vocab_path, merges_file=combined_merges_path)
-    
     # tokenizer = WhisperTokenizer.from_pretrained(pretrained_path, task="transcribe")
+    
     # Create processor
     processor = WhisperProcessor(feature_extractor=feature_extractor, tokenizer=tokenizer)
     tokenizer.save_pretrained(tokenizer_path)
@@ -167,7 +167,7 @@ def main(rank, world_size, config, resume, preload):
     model =  WhisperForConditionalGeneration.from_pretrained(pretrained_path)
     
     
-    model.config.vocab_size = tokenizer.vocab_size
+    # model.config.vocab_size = tokenizer.vocab_size
     model.config.forced_decoder_ids = None
     model.config.suppress_tokens = []
     

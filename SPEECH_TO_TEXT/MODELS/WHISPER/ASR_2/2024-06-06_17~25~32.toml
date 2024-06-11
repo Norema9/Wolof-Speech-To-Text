@@ -1,0 +1,71 @@
+[meta]
+name = "ASR_2"
+pretrained_path = "openai/whisper-small"
+seed = 19
+epochs = 30
+save_dir = "MODELS\\WHISPER"
+gradient_accumulation_steps = 16
+use_amp = true
+device_ids = "0,1"
+sr = 16000
+max_clip_grad_norm = 5.0
+
+[huggingface]
+push_to_hub = false
+push_every_validation_step = false
+overwrite_output_dir = false
+blocking = false
+
+[train_dataset]
+path = "base.base_dataset.BaseDataset"
+
+[val_dataset]
+path = "base.base_dataset.BaseDataset"
+
+[optimizer]
+lr = 1e-6
+
+[scheduler]
+max_lr = 0.0005
+
+[trainer]
+path = "trainer.trainer.Trainer"
+
+[huggingface.args]
+local_dir = "D:\\MARONE\\WOLOF\\SPEECH_TO_TEXT\\MODELS\\WHISPER\\ASR_2\\huggingface-hub"
+use_auth_token = true
+clone_from = ""
+
+[train_dataset.args]
+path = "D:\\MARONE\\WOLOF\\SPEECH_TO_TEXT\\DATA\\CLEANED\\WOLOF_AUDIO_TRANS\\train_data.csv"
+preload_data = false
+delimiter = "|"
+nb_workers = 16
+
+[train_dataset.dataloader]
+batch_size = 1
+num_workers = 16
+pin_memory = true
+drop_last = true
+
+[train_dataset.sampler]
+shuffle = true
+drop_last = true
+
+[val_dataset.args]
+path = "D:\\MARONE\\WOLOF\\SPEECH_TO_TEXT\\DATA\\CLEANED\\WOLOF_AUDIO_TRANS\\validation_data.csv"
+preload_data = false
+delimiter = "|"
+nb_workers = 16
+
+[val_dataset.dataloader]
+batch_size = 1
+num_workers = 4
+
+[val_dataset.sampler]
+shuffle = false
+drop_last = false
+
+[trainer.args]
+validation_interval = 100
+save_max_metric_score = false

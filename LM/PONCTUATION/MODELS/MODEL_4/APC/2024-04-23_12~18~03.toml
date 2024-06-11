@@ -1,0 +1,155 @@
+[meta]
+name = "APC"
+pretrained_bert_model_name = "bert-base-multilingual-cased"
+seed = 42
+epochs = 3
+save_dir = "MODEL_4"
+vocab_file = "MODEL\\vocabulary.json"
+gradient_accumulation_steps = 2
+use_amp = false
+device_ids = "0,1"
+max_clip_grad_norm = 5.0
+max_seq_length = 32
+verbose = true
+word_sep = "|"
+pad_label = "P"
+
+[special_tokens]
+bos_token = "<bos>"
+eos_token = "<eos>"
+unk_token = "<unk>"
+pad_token = "<pad>"
+
+[char_to_replace]
+"ï" = "a"
+"î" = "i"
+"ā" = "a"
+"ƭ" = "c"
+"ī" = "i"
+"ä" = "a"
+"ɗ" = "nd"
+"ń" = "ñ"
+"ồ" = "o"
+"ї" = "i"
+"ü" = "u"
+"ù" = "u"
+"ú" = "u"
+"ă" = "ã"
+"â" = "a"
+"û" = "u"
+"è" = "e"
+"ç" = "s"
+"ö" = "o"
+"ý" = "y"
+"ì" = "i"
+"í" = "i"
+"ɓ" = "b"
+"ô" = "o"
+"ê" = "e"
+"à" = "a"
+
+[huggingface]
+push_to_hub = false
+push_every_validation_step = false
+overwrite_output_dir = false
+blocking = false
+
+[dataset_creator]
+path = "base.create_dataset.CreateDataset"
+
+[default_collate]
+path = "dataloader.dataset.DefaultCollate"
+
+[train_dataset]
+path = "base.base_dataset.BaseDataset"
+
+[val_dataset]
+path = "base.base_dataset.BaseDataset"
+
+[model]
+path = "model.model.PunctuationCapitalizationModel"
+
+[optimizer]
+lr = 1e-6
+
+[scheduler]
+max_lr = 0.0005
+
+[trainer]
+path = "trainer.trainer.Trainer"
+
+[huggingface.args]
+local_dir = "MODEL\\huggingface-hub"
+use_auth_token = true
+clone_from = ""
+
+[dataset_creator.args]
+data_brut_file = "D:\\MARONE\\WOLOF\\LM\\PONCTUATION\\DATA\\data_brut\\data_sentences_last.txt"
+punctuations = ".?!:,;"
+save_data_dir = "D:\\MARONE\\WOLOF\\LM\\PONCTUATION\\DATA\\datasets"
+train_text_file_name = "train_text.txt"
+train_label_file_name = "train_label.txt"
+val_text_file_name = "val_text.txt"
+val_label_file_name = "val_label.txt"
+test_text_file_name = "test_text.txt"
+test_label_file_name = "test_label.txt"
+punct_label_vocab_file = "punct_label_vocab.txt"
+capit_label_vocab_file = "capit_label_vocab.txt"
+chars_to_keep = " abcdefghijklmnopqrstuvwxyzñóŋéçèɓõẽáãë"
+train_ratio = 0.89
+val_ratio = 0.1
+test_ratio = 0.01
+
+[default_collate.args]
+ignore_start_end = false
+ignore_extra_tokens = false
+
+[train_dataset.args]
+label_info_save_dir = "D:\\MARONE\\WOLOF\\LM\\PONCTUATION\\DATA\\lebels_info\\train_label_info"
+nb_workers = 16
+n_jobs = 0
+num_samples = -1
+number_of_batches_is_multiple_of = 1
+get_label_frequencies = false
+ignore_extra_tokens = false
+ignore_start_end = true
+
+[train_dataset.dataloader]
+batch_size = 8
+num_workers = 16
+pin_memory = true
+drop_last = true
+
+[train_dataset.sampler]
+shuffle = true
+drop_last = true
+
+[val_dataset.args]
+label_info_save_dir = "D:\\MARONE\\WOLOF\\LM\\PONCTUATION\\DATA\\lebels_info\\val_label_info"
+nb_workers = 16
+n_jobs = 0
+num_samples = -1
+number_of_batches_is_multiple_of = 1
+get_label_frequencies = false
+ignore_extra_tokens = false
+ignore_start_end = true
+
+[val_dataset.dataloader]
+batch_size = 1
+num_workers = 4
+
+[val_dataset.sampler]
+shuffle = false
+drop_last = false
+
+[model.args]
+punct_hidden_size = 512
+capit_hidden_size = 512
+activation = "relu"
+dropout = 0.1
+punct_num_layers = 2
+capit_num_layers = 1
+
+[trainer.args]
+validation_interval = 500
+save_max_metric_score = false

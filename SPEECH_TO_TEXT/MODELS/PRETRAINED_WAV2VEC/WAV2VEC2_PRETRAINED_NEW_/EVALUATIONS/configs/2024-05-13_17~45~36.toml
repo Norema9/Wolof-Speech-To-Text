@@ -1,0 +1,87 @@
+[meta]
+name = "PRETRAINED_ASR"
+model_name_or_path = "facebook/wav2vec2-xls-r-300m"
+load_from_pretrained = false
+seed = 42
+num_train_epochs = 30
+max_train_steps = 300000
+output_dir = "D:\\MARONE\\WOLOF\\SPEECH_TO_TEXT\\MODELS\\WAV2VEC2_PRETRAINED_NEW_\\EVALUATIONS"
+dataset_dir = "DATA\\CLEANED\\WOLOF_AUDIO\\datasets"
+audio_dir = "D:\\MARONE\\WOLOF\\SPEECH_TO_TEXT\\DATA\\CLEANED\\WOLOF_AUDIO\\audio"
+separator = "|"
+gradient_checkpointing = false
+gradient_accumulation_steps = 8
+use_amp = false
+device_ids = "0,1"
+max_gumbel_temperature = 2.0
+gumbel_temperature_decay = 0.999995
+min_gumbel_temperature = 0.5
+saving_steps = 10000
+logging_steps = 1
+mask_time_prob = 0.6
+
+[accelerator]
+multi_gpu = true
+num_machines = 1
+num_processes = 16
+mixed_precision = true
+num_cpu_threads_per_process = 12
+
+[huggingface]
+push_to_hub = false
+hub_model_id = ""
+
+[train_dataset]
+path = "dataset.dataset.CustomDataset"
+
+[val_dataset]
+path = "dataset.dataset.CustomDataset"
+
+[optimizer]
+learning_rate = 0.005
+adam_beta1 = 0.9
+adam_beta2 = 0.98
+adam_epsilon = 1e-6
+
+[scheduler]
+lr_scheduler_type = "linear"
+num_warmup_steps = 90000
+max_lr = 0.01
+
+[huggingface.args]
+local_dir = "MODEL\\huggingface-hub"
+use_auth_token = true
+clone_from = ""
+hub_token = ""
+
+[train_dataset.args]
+files = "D:\\MARONE\\WOLOF\\SPEECH_TO_TEXT\\DATA\\CLEANED\\WOLOF_AUDIO\\datasets\\train_dataset.csv"
+sep = "|"
+audio_column_name = "path"
+sr = 16000
+duration_column_name = "duration"
+min_duration = 0.5
+max_duration = 6
+
+[train_dataset.dataloader]
+per_device_train_batch_size = 2
+
+[train_dataset.sampler]
+shuffle = true
+drop_last = true
+
+[val_dataset.args]
+files = "D:\\MARONE\\WOLOF\\SPEECH_TO_TEXT\\DATA\\CLEANED\\WOLOF_AUDIO\\datasets\\validation_dataset.csv"
+sep = "|"
+sr = 16000
+audio_column_name = "path"
+duration_column_name = "duration"
+min_duration = 0.5
+max_duration = 6
+
+[val_dataset.dataloader]
+per_device_eval_batch_size = 1
+
+[val_dataset.sampler]
+shuffle = false
+drop_last = false

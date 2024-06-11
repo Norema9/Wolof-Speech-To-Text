@@ -1,0 +1,53 @@
+[meta]
+name = "ASR_LM_1"
+pretrained_path = "facebook/wav2vec2-xls-r-300m"
+seed = 19
+epochs = 30
+save_dir = "MODELS\\WAV2VEC2"
+gradient_accumulation_steps = 4
+use_amp = false
+device_ids = "0"
+sr = 16000
+max_clip_grad_norm = 5.0
+huggingface_folder = "D:\\MARONE\\WOLOF\\SPEECH_TO_TEXT\\MODELS\\WAV2VEC2\\ASR_LM\\huggingface-hub_lm"
+huggingface_hub_model = "D:\\MARONE\\WOLOF\\SPEECH_TO_TEXT\\MODELS\\WAV2VEC2\\ASR\\huggingface-hub"
+best_model = "D:\\MARONE\\WOLOF\\SPEECH_TO_TEXT\\MODELS\\WAV2VEC2\\ASR\\huggingface-hub"
+
+[special_tokens]
+bos_token = "<bos>"
+eos_token = "<eos>"
+unk_token = "<unk>"
+pad_token = "<pad>"
+
+[huggingface]
+push_to_hub = false
+push_every_validation_step = false
+overwrite_output_dir = false
+blocking = false
+
+[build_lm_processor]
+ngram_path = "CODES\\WAV2VEC_LM\\ngram\\5gram_correct_wolof.arpa"
+processor_location = "MODELS\\WAV2VEC2\\huggingface-hub"
+processor_with_lm_savedir = "MODELS\\WAV2VEC2\\huggingface-hub_lm"
+
+[val_dataset]
+path = "base.base_dataset.BaseDataset"
+
+[huggingface.args]
+local_dir = "D:\\MARONE\\WOLOF\\SPEECH_TO_TEXT\\CODES\\MODELS\\WAV2VEC2\\huggingface-hub"
+use_auth_token = true
+clone_from = ""
+
+[val_dataset.args]
+path = "D:\\MARONE\\WOLOF\\SPEECH_TO_TEXT\\DATA\\CLEANED\\WOLOF_AUDIO_TRANS\\validation_data.csv"
+preload_data = false
+delimiter = "|"
+nb_workers = 16
+
+[val_dataset.dataloader]
+batch_size = 1
+num_workers = 4
+
+[val_dataset.sampler]
+shuffle = false
+drop_last = false
