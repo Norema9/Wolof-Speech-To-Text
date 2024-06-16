@@ -154,7 +154,7 @@ def main(rank, world_size, config, resume, preload):
 
     if rank == 0:
         print("Number of training utterances: ", len(train_ds))
-        print("Number of validation utterances: ", len(val_ds))
+        print("Number of validation utterances: ", len(val_ds))    
 
     trainer_class = initialize_module(config["trainer"]["path"], initialize=False)
     trainer = trainer_class(

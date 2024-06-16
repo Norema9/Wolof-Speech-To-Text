@@ -84,46 +84,25 @@ def main(rank, world_size, config, resume, preload):
     dist.barrier()
     
     
-     # Initialize tokenizers
+    # Initialize tokenizers
     custom_tokenizer =  WhisperTokenizer(vocab_file=os.path.join(custom_tokenizer_path,  "vocab.json"), merges_file=os.path.join(custom_tokenizer_path,  "merges.txt"))
-    pretrained_tokenizer = WhisperTokenizer.from_pretrained(pretrained_path, task="transcribe")
+    tokenizer = WhisperTokenizer.from_pretrained(pretrained_path, task="transcribe")
     
     os.makedirs(pretrained_tokenizer_path, exist_ok=True)
-    pretrained_tokenizer.save_pretrained(pretrained_tokenizer_path)
+    tokenizer.save_pretrained(pretrained_tokenizer_path)
 
-    # Load custom merges directly from the file
-    custom_merges_path = os.path.join(custom_tokenizer_path, "merges.txt")
-    with open(custom_merges_path, 'r', encoding='utf-8') as merges_file:
-        custom_merges = [tuple(line.split()) for line in merges_file.read().splitlines()]
+    # check if the new tokens are already in the vocabulary
+    new_tokens = set(custom_tokenizer.get_vocab().keys()) - set(tokenizer.get_vocab().keys())
 
-    # Load pretrained merges directly from the file
-    pretrained_merges_path = os.path.join(pretrained_tokenizer_path, "merges.txt")
-    with open(pretrained_merges_path, 'r', encoding='utf-8') as merges_file:
-        pretrained_merges = [tuple(line.split()) for line in merges_file.read().splitlines()]
-
-    # Extract vocabularies
-    custom_vocab = custom_tokenizer.get_vocab()
-    pretrained_vocab = pretrained_tokenizer.get_vocab()
-
-    # Combine vocabularies
-    combined_vocab = {**pretrained_vocab, **custom_vocab}
-
-    # Combine merges and remove duplicates while maintaining order
-    combined_merges = pretrained_merges + [merge for merge in custom_merges if merge not in pretrained_merges]
-
-    # Save the combined vocab and merges to temporary files
-    combined_vocab_path = os.path.join(tokenizer_path, "combined_vocab.json")
-    combined_merges_path = os.path.join(tokenizer_path, "combined_merges.txt")
-
-    with open(combined_vocab_path, 'w', encoding='utf-8') as vocab_file:
-        json.dump(combined_vocab, vocab_file, ensure_ascii=False)
-
-    with open(combined_merges_path, 'w', encoding='utf-8') as merges_file:
-        merges_file.write('\n'.join([' '.join(merge) for merge in combined_merges]))
+    # add the tokens to the tokenizer vocabulary
+    tokenizer.add_tokens(list(new_tokens))
+    tokenizer.add_special_tokens({'pad_token': '[PAD]'})
     
-    # Initialize the new tokenizer with the combined vocab and merges
-    tokenizer = WhisperTokenizer(vocab_file=combined_vocab_path, merges_file=combined_merges_path)
-    # tokenizer = WhisperTokenizer.from_pretrained(pretrained_path, task="transcribe")
+    special_tokens = ["<|endoftext|>", "<|startoftranscript|>",  "<|en|>", '[PAD]']
+    vocab =  tokenizer.get_vocab()
+    vocab_to_id = set(vocab.keys()) - (set(custom_tokenizer.get_vocab().keys()) | set(special_tokens))
+
+    custom_suppressed_tokens = [vocab[key] for key in vocab_to_id]
     
     # Create processor
     processor = WhisperProcessor(feature_extractor=feature_extractor, tokenizer=tokenizer)
@@ -166,8 +145,10 @@ def main(rank, world_size, config, resume, preload):
 
     model =  WhisperForConditionalGeneration.from_pretrained(pretrained_path)
     
-    
-    # model.config.vocab_size = tokenizer.vocab_size
+    # add new random embeddings for the appended tokens
+    model.resize_token_embeddings(len(tokenizer)) 
+    # Suppress tokens
+    model.config.suppress_tokens = custom_suppressed_tokens
     model.config.forced_decoder_ids = None
     model.config.suppress_tokens = []
     

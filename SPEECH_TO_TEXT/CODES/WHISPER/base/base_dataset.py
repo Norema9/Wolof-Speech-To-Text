@@ -82,7 +82,11 @@ class BaseDataset(Dataset):
         return wavs
 
     def load_data(self, path, delimiter) -> pd.DataFrame:
-        df = pd.read_csv(path, delimiter = delimiter)
+        paths = path.split("&")
+        df = pd.DataFrame()
+        for path_ in paths:
+            d = pd.read_csv(path_, delimiter = delimiter)
+            df = pd.concat([df, d[["path", "transcription"]]], ignore_index=True, axis=0)
         return df
 
     def get_data(self) -> Dataset:

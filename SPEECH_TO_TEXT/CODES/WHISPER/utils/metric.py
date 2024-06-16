@@ -1,8 +1,9 @@
 from datasets import load_metric
 import torch
+from transformers import WhisperFeatureExtractor, WhisperTokenizer
 
 class Metric:
-    def __init__(self, tokenizer):
+    def __init__(self, tokenizer:WhisperTokenizer):
         self.tokenizer = tokenizer
         self.wer_metric = load_metric("wer")
     def __call__(self, logits, label_ids):
