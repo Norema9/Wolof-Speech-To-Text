@@ -147,6 +147,7 @@ def main(rank, world_size, config, resume, preload):
     
     # add new random embeddings for the appended tokens
     model.resize_token_embeddings(len(tokenizer)) 
+    # model.config.vocab_size = tokenizer.vocab
     # Suppress tokens
     model.config.suppress_tokens = custom_suppressed_tokens
     model.config.forced_decoder_ids = None
