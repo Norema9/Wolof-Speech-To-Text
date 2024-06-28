@@ -85,24 +85,24 @@ def main(rank, world_size, config, resume, preload):
     
     
     # Initialize tokenizers
-    custom_tokenizer =  WhisperTokenizer(vocab_file=os.path.join(custom_tokenizer_path,  "vocab.json"), merges_file=os.path.join(custom_tokenizer_path,  "merges.txt"))
+    # custom_tokenizer =  WhisperTokenizer(vocab_file=os.path.join(custom_tokenizer_path,  "vocab.json"), merges_file=os.path.join(custom_tokenizer_path,  "merges.txt"))
     tokenizer = WhisperTokenizer.from_pretrained(pretrained_path, task="transcribe")
     
     os.makedirs(pretrained_tokenizer_path, exist_ok=True)
     tokenizer.save_pretrained(pretrained_tokenizer_path)
 
     # check if the new tokens are already in the vocabulary
-    new_tokens = set(custom_tokenizer.get_vocab().keys()) - set(tokenizer.get_vocab().keys())
+    # new_tokens = set(custom_tokenizer.get_vocab().keys()) - set(tokenizer.get_vocab().keys())
 
     # add the tokens to the tokenizer vocabulary
-    tokenizer.add_tokens(list(new_tokens))
-    tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+    # tokenizer.add_tokens(list(new_tokens))
+    # tokenizer.add_special_tokens({'pad_token': '[PAD]'})
     
-    special_tokens = ["<|endoftext|>", "<|startoftranscript|>",  "<|en|>", '[PAD]']
-    vocab =  tokenizer.get_vocab()
-    vocab_to_id = set(vocab.keys()) - (set(custom_tokenizer.get_vocab().keys()) | set(special_tokens))
+    # special_tokens = ["<|endoftext|>", "<|startoftranscript|>",  "<|en|>", '[PAD]']
+    # vocab =  tokenizer.get_vocab()
+    # vocab_to_id = set(vocab.keys()) - (set(custom_tokenizer.get_vocab().keys()) | set(special_tokens))
 
-    custom_suppressed_tokens = [vocab[key] for key in vocab_to_id]
+    # custom_suppressed_tokens = [vocab[key] for key in vocab_to_id]
     
     # Create processor
     processor = WhisperProcessor(feature_extractor=feature_extractor, tokenizer=tokenizer)
@@ -146,10 +146,10 @@ def main(rank, world_size, config, resume, preload):
     model =  WhisperForConditionalGeneration.from_pretrained(pretrained_path)
     
     # add new random embeddings for the appended tokens
-    model.resize_token_embeddings(len(tokenizer)) 
+    # model.resize_token_embeddings(len(tokenizer)) 
     # model.config.vocab_size = tokenizer.vocab
     # Suppress tokens
-    model.config.suppress_tokens = custom_suppressed_tokens
+    # model.config.suppress_tokens = custom_suppressed_tokens
     model.config.forced_decoder_ids = None
     model.config.suppress_tokens = []
     

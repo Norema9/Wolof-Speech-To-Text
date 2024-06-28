@@ -1,17 +1,17 @@
 [meta]
-name = "ASR_LM_1" 
+name = "ASR_LM_4" 
 pretrained_path = "facebook/wav2vec2-xls-r-300m"
 seed = 19
 epochs = 30
 save_dir =  "MODELS\\WAV2VEC2" 
 gradient_accumulation_steps = 4
 use_amp = false # Whether to use Automatic Mixed Precision for speeding up - https://pytorch.org/docs/stable/amp.html
-device_ids = "0" # set the gpu devices on which you want to train your model
+device_ids = "0,1" # set the gpu devices on which you want to train your model
 sr = 16000
 max_clip_grad_norm = 5.0 # torch.nn.utils.clip_grad_norm_
-huggingface_folder = "D:\\MARONE\\WOLOF\\SPEECH_TO_TEXT\\MODELS\\WAV2VEC2\\ASR_LM\\huggingface-hub_lm"
-huggingface_hub_model = "D:\\MARONE\\WOLOF\\SPEECH_TO_TEXT\\MODELS\\WAV2VEC2\\ASR\\huggingface-hub"
-best_model = "D:\\MARONE\\WOLOF\\SPEECH_TO_TEXT\\MODELS\\WAV2VEC2\\ASR\\huggingface-hub"
+huggingface_folder = "D:\\MARONE\\WOLOF\\SPEECH_TO_TEXT\\MODELS\\WAV2VEC2\\ASR_4\\huggingface-hub"
+huggingface_hub_model = "D:\\MARONE\\WOLOF\\SPEECH_TO_TEXT\\MODELS\\WAV2VEC2\\ASR_4\\huggingface-hub"
+best_model = "D:\\MARONE\\WOLOF\\SPEECH_TO_TEXT\\MODELS\\WAV2VEC2\\ASR_4\\huggingface-hub"
 
 
 [special_tokens]
